@@ -5,12 +5,19 @@ app.get("/user",(req,res)=>{
     res.send({"firstname":"soumya","lastname":"behera"})
 })
 
+app.post("/user/:userID/:password",(req,res)=>{
+    console.log(req.params); //http://localhost:3000/user/23/dkahkah output:{ userID: '23', password: 'dkahkah' }
+    res.send("Data successfully deleted to the Database")
+})
+
 app.post("/user",(req,res)=>{
-    res.send("Data successfully saved to the Database")
+    console.log(req.query); //http://localhost:3000/user?soumya=34 ouput:{ soumya: '34' }
+    res.send("Data successfully deleted to the Database")
 })
 
 app.delete("/user",(req,res)=>{
     res.send("Data successfully deleted to the Database")
+
 })
 
 
