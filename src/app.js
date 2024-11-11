@@ -5,7 +5,6 @@ const User = require("./Models/User");
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  console.log(req.body);
   //Creating a new instance of the User model
   const user = new User(req.body);
   try {
@@ -18,14 +17,14 @@ app.post("/signup", async (req, res) => {
 
 //get user by email
 app.get("/user", async (req, res) => {
-  const userMail =req.body.emailId ;
-  console.log(userMail)   
+  const userMail = req.body.emailId;
+  console.log(userMail);
   try {
-    const fetchUser=await User.find({emailId:userMail});
-    if(fetchUser===0){
-      res.status(404).send("User not found")
-    }else{
-      res.send(fetchUser)
+    const fetchUser = await User.find({ emailId: userMail });
+    if (fetchUser === 0) {
+      res.status(404).send("User not found");
+    } else {
+      res.send(fetchUser);
     }
   } catch (err) {
     res.status(400).send("Error saving the user" + err.message);
@@ -35,17 +34,36 @@ app.get("/user", async (req, res) => {
 //Feed API - GET/feed -get all the users from the database
 app.get("/feed", async (req, res) => {
   try {
-    const users=await User.find();
+    const users = await User.find();
     res.send(users);
   } catch (err) {
     res.status(400).send("Error saving the user" + err.message);
   }
 });
 
+//Delete a user by ID
+app.delete("/user", async (req, res) => {
+  const userId = req.body._id;
+  console.log(userId)
+  try {
+    const users = await User.findByIdAndDelete({ _id: userId });
+    res.send(users);
+  } catch (err) {
+    res.status(400).send("Error saving the user" + err.message);
+  }
+});
 
-
-
-
+//Update data of the user
+app.patch("/user", async (req, res) => {
+  const userId = req.body._id;
+  const data=req.body
+  try {
+    const users = await User.findByIdAndUpdate({ _id: userId },data,{runValidators:true});
+    res.send(users);
+  } catch (err) {
+    res.status(400).send("Error saving the user" + err.message);
+  }
+});
 
 
 
