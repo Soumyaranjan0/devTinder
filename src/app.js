@@ -58,6 +58,18 @@ app.patch("/user", async (req, res) => {
   const userId = req.body._id;
   const data=req.body
   try {
+    //validations for fileds
+    const allow_updates=["_id","photoUrl","about","gender","age","skills"]
+    const isUpdateAllowed=Object.keys(data).every((k)=>allow_updates.includes(k))
+    if(!isUpdateAllowed){
+      throw new Error("update not allowed")
+    }
+    //validation for skills
+    if(data?.skills.length>10){
+      throw new Error("user canot add more than 10 skills")
+    }
+
+    //find the data by id and update it
     const users = await User.findByIdAndUpdate({ _id: userId },data,{runValidators:true});
     res.send(users);
   } catch (err) {
