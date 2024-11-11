@@ -1,33 +1,29 @@
-const express = require('express')
-const app = express()
+const express = require("express");
+const app = express();
+const connectDB = require("./config/database");
+const User = require("./Models/User");
+app.use(express.json());
 
-app.get("/user",(req,res)=>{
-    res.send({"firstname":"soumya","lastname":"behera"})
-})
+app.post("/signup", async (req, res) => {
+  console.log(req.body);
+  //Creating a new instance of the User model
+  const user = new User(req.body);
+  try {
+    await user.save();
+    res.send("user signup successfully");
+  } catch (err) {
+    res.status(400).send("Error saving the user" + err.message);
+  }
+});
 
-app.post("/user/:userID/:password",(req,res)=>{
-    console.log(req.params); //http://localhost:3000/user/23/dkahkah output:{ userID: '23', password: 'dkahkah' }
-    res.send("Data successfully deleted to the Database")
-})
-
-app.post("/user",(req,res)=>{
-    console.log(req.query); //http://localhost:3000/user?soumya=34 ouput:{ soumya: '34' }
-    res.send("Data successfully deleted to the Database")
-})
-
-app.delete("/user",(req,res)=>{
-    res.send("Data successfully deleted to the Database")
-
-})
-
-
-//this will match all the HTTP method API calls to Test
-app.use('/hello', function (req, res) {
-    res.send('Hello hello hello')
-})
-
-
-
-app.listen(3000,()=>{
-    console.log("Server is successfully listening on port 3000...");
-})
+//Database connection and Port Listening(imp:first database connection then after start the server)
+connectDB()
+  .then(() => {
+    console.log("MongoDB connected successfully...");
+    app.listen(3000, () => {
+      console.log("Server is successfully listening on port 3000...");
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection failed");
+  });

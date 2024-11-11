@@ -1,3 +1,4 @@
+//Postman Url Test
 app.post("/user/:userID/:password",(req,res)=>{
     console.log(req.params); //http://localhost:3000/user/23/dkahkah output:{ userID: '23', password: 'dkahkah' }
     res.send("Data successfully deleted to the Database")
