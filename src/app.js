@@ -6,12 +6,14 @@ app.use(express.json());
 const { validateSignupData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
 
+//SignUp for a new user
 app.post("/signup", async (req, res) => {
   try {
     //Validating of data from utils file
     validateSignupData(req);
 
-    const { firstName, lastName, emailId, password, age, gender ,skills } = req.body;
+    const { firstName, lastName, emailId, password, age, gender, skills } =
+      req.body;
 
     //Encrypt the password
     const passwordHash = await bcrypt.hash(password, 10);
@@ -24,10 +26,27 @@ app.post("/signup", async (req, res) => {
       password: passwordHash,
       age,
       gender,
-      skills
+      skills,
     });
     await user.save();
     res.send("User signup successfully!");
+  } catch (err) {
+    res.status(400).send("Error: " + err.message);
+  }
+});
+
+//Login a user
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user=await User.findOne({emailId})
+    if(!user){
+      throw new Error("User is not present in the Database")
+    }
+    const isPasswordValid=bcrypt.compare(password,user.password)
+    if(isPasswordValid){
+      res.send("User Login successsfully")
+    }
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }
