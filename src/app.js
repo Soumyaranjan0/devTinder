@@ -3,15 +3,33 @@ const app = express();
 const connectDB = require("./config/database");
 const User = require("./Models/User");
 app.use(express.json());
+const { validateSignupData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 app.post("/signup", async (req, res) => {
-  //Creating a new instance of the User model
-  const user = new User(req.body);
   try {
+    //Validating of data from utils file
+    validateSignupData(req);
+
+    const { firstName, lastName, emailId, password, age, gender ,skills } = req.body;
+
+    //Encrypt the password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    //Creating a new instance of the User model
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+      age,
+      gender,
+      skills
+    });
     await user.save();
-    res.send("user signup successfully");
+    res.send("User signup successfully!");
   } catch (err) {
-    res.status(400).send("Error saving the user" + err.message);
+    res.status(400).send("Error: " + err.message);
   }
 });
 
@@ -44,7 +62,7 @@ app.get("/feed", async (req, res) => {
 //Delete a user by ID
 app.delete("/user", async (req, res) => {
   const userId = req.body._id;
-  console.log(userId)
+  console.log(userId);
   try {
     const users = await User.findByIdAndDelete({ _id: userId });
     res.send(users);
@@ -56,28 +74,37 @@ app.delete("/user", async (req, res) => {
 //Update data of the user
 app.patch("/user", async (req, res) => {
   const userId = req.body._id;
-  const data=req.body
+  const data = req.body;
   try {
     //validations for fileds
-    const allow_updates=["_id","photoUrl","about","gender","age","skills"]
-    const isUpdateAllowed=Object.keys(data).every((k)=>allow_updates.includes(k))
-    if(!isUpdateAllowed){
-      throw new Error("update not allowed")
+    const allow_updates = [
+      "_id",
+      "photoUrl",
+      "about",
+      "gender",
+      "age",
+      "skills",
+    ];
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      allow_updates.includes(k)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("update not allowed");
     }
     //validation for skills
-    if(data?.skills.length>10){
-      throw new Error("user canot add more than 10 skills")
+    if (data?.skills.length > 10) {
+      throw new Error("user canot add more than 10 skills");
     }
 
     //find the data by id and update it
-    const users = await User.findByIdAndUpdate({ _id: userId },data,{runValidators:true});
+    const users = await User.findByIdAndUpdate({ _id: userId }, data, {
+      runValidators: true,
+    });
     res.send(users);
   } catch (err) {
     res.status(400).send("Error saving the user" + err.message);
   }
 });
-
-
 
 //Database connection and Port Listening(imp:first database connection then after start the server)
 connectDB()
