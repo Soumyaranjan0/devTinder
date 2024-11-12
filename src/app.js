@@ -1,131 +1,18 @@
 const express = require("express");
 const app = express();
 const connectDB = require("./config/database");
-const User = require("./Models/User");
+const cookieParser = require("cookie-parser");
+
 app.use(express.json());
-const { validateSignupData } = require("./utils/validation");
-const bcrypt = require("bcrypt");
+app.use(cookieParser());
 
-//SignUp for a new user
-app.post("/signup", async (req, res) => {
-  try {
-    //Validating of data from utils file
-    validateSignupData(req);
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
 
-    const { firstName, lastName, emailId, password, age, gender, skills } =
-      req.body;
-
-    //Encrypt the password
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    //Creating a new instance of the User model
-    const user = new User({
-      firstName,
-      lastName,
-      emailId,
-      password: passwordHash,
-      age,
-      gender,
-      skills,
-    });
-    await user.save();
-    res.send("User signup successfully!");
-  } catch (err) {
-    res.status(400).send("Error: " + err.message);
-  }
-});
-
-//Login a user
-app.post("/login", async (req, res) => {
-  try {
-    const { emailId, password } = req.body;
-    const user = await User.findOne({ emailId });
-    if (!user) {
-      throw new Error("User is not present in the Database"); //Dont give extra information use like"Invalid Credential"
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (isPasswordValid) {
-      res.send("User Login successsfully!");
-    } else {
-      throw new Error("User password is Wrong");
-    }
-  } catch (err) {
-    res.status(400).send("Error: " + err.message);
-  }
-});
-
-//get user by email
-app.get("/user", async (req, res) => {
-  const userMail = req.body.emailId;
-  console.log(userMail);
-  try {
-    const fetchUser = await User.find({ emailId: userMail });
-    if (fetchUser === 0) {
-      res.status(404).send("User not found");
-    } else {
-      res.send(fetchUser);
-    }
-  } catch (err) {
-    res.status(400).send("Error saving the user" + err.message);
-  }
-});
-
-//Feed API - GET/feed -get all the users from the database
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find();
-    res.send(users);
-  } catch (err) {
-    res.status(400).send("Error saving the user" + err.message);
-  }
-});
-
-//Delete a user by ID
-app.delete("/user", async (req, res) => {
-  const userId = req.body._id;
-  console.log(userId);
-  try {
-    const users = await User.findByIdAndDelete({ _id: userId });
-    res.send(users);
-  } catch (err) {
-    res.status(400).send("Error saving the user" + err.message);
-  }
-});
-
-//Update data of the user
-app.patch("/user", async (req, res) => {
-  const userId = req.body._id;
-  const data = req.body;
-  try {
-    //validations for fileds
-    const allow_updates = [
-      "_id",
-      "photoUrl",
-      "about",
-      "gender",
-      "age",
-      "skills",
-    ];
-    const isUpdateAllowed = Object.keys(data).every((k) =>
-      allow_updates.includes(k)
-    );
-    if (!isUpdateAllowed) {
-      throw new Error("update not allowed");
-    }
-    //validation for skills
-    if (data?.skills.length > 10) {
-      throw new Error("user canot add more than 10 skills");
-    }
-
-    //find the data by id and update it
-    const users = await User.findByIdAndUpdate({ _id: userId }, data, {
-      runValidators: true,
-    });
-    res.send(users);
-  } catch (err) {
-    res.status(400).send("Error saving the user" + err.message);
-  }
-});
+app.use("/", authRouter)
+app.use("/", profileRouter)
+app.use("/", requestRouter);
 
 //Database connection and Port Listening(imp:first database connection then after start the server)
 connectDB()
